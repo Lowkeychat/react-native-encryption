@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "react-native-lowkey-encryption": ["./src/index"]
+      "@lowkey/react-native-encryption": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

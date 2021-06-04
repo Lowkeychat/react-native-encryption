@@ -1,4 +1,4 @@
-# react-native-lowkey-encryption
+<!-- # react-native-lowkey-encryption
 
 encryption
 
@@ -24,4 +24,4 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 
 ## License
 
-MIT
+MIT -->
