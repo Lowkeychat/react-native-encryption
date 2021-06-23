@@ -59,5 +59,6 @@
  */
 - (NSString *)base64EncodingWithLineLength:(NSUInteger)lineLength;
 
+- (NSString *)hexadecimalString;
 
 @end

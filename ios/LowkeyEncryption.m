@@ -35,6 +35,19 @@ RCT_EXPORT_METHOD(asymmetric_encryptStringWithPublicKey:(NSDictionary *)options
     
 }
 
+#pragma mark - Encrypting a message with multiple public keys
+
+RCT_EXPORT_METHOD(asymmetric_encryptGroup:(NSDictionary *)options
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    dispatch_queue_t queue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0ul);
+    dispatch_async(queue, ^{
+        [[AsymmetricEncryption alloc] encryptGroup:resolve props:options];
+    });
+    
+}
+
 #pragma mark - Decrypting a message with private key
 
 RCT_EXPORT_METHOD(asymmetric_decryptStringWithPrivateKey:(NSDictionary *)options
@@ -44,6 +57,18 @@ RCT_EXPORT_METHOD(asymmetric_decryptStringWithPrivateKey:(NSDictionary *)options
     dispatch_queue_t queue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0ul);
     dispatch_async(queue, ^{
         [[AsymmetricEncryption alloc] decryptStringWithPrivateKey:resolve props:options];
+    });
+}
+
+#pragma mark - Decrypting a message with private key
+
+RCT_EXPORT_METHOD(asymmetric_decryptGroup:(NSDictionary *)options
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    dispatch_queue_t queue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0ul);
+    dispatch_async(queue, ^{
+        [[AsymmetricEncryption alloc]  decryptGroup:resolve props:options];
     });
 }
 
@@ -81,7 +106,7 @@ RCT_EXPORT_METHOD(symmetric_decryptStringWithSymmetricKey:(NSDictionary *)option
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-    dispatch_queue_t queue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0ul);
+    dispatch_queue_t queue  = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0ul);
     dispatch_async(queue, ^{
         [[SymmetricEncryption alloc] decryptStringWithSymmetricKey:resolve props:options];
     });

@@ -10,8 +10,10 @@ import {
   TouchableWithoutFeedback,
   TextInput,
   Dimensions,
+  ScrollView,
 } from 'react-native';
 import Encryption from '@lowkey/react-native-encryption';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 const ENCRYPTION_TYPES = {
   SYMMETRIC: 'SYMMETRIC',
@@ -19,35 +21,36 @@ const ENCRYPTION_TYPES = {
 };
 
 export default function App() {
-  const [time, setTime] = React.useState(0);
+  const [outgoingMessage, setOutgoingMessage] = React.useState('');
+  const [incomingMessage, setIncomingMessage] = React.useState('');
+
   const [encryptionType, setEncryptionType] = React.useState(
     ENCRYPTION_TYPES.ASYMMETRIC
   );
-
-  React.useEffect(() => {
-    const interval = setInterval(() => setTime(time + 1), 1000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [time]);
-
   const [keys, setKeys] = React.useState({
-    generated: false,
-    publicKey: '',
     privateKey: '',
-    symmetricKey: '',
+    publicKey: '',
+  });
+
+  const [symmetricKey, setSymmetricKey] = React.useState('');
+
+  const [rKeys, setRKeys] = React.useState({
+    privateKey: '',
+    publicKey: '',
   });
 
   const [message, setMessage] = React.useState({
-    encrypted: false,
+    encrypted: true,
     decrypted: false,
     value: '',
   });
 
+  const [symmetricalMessage, setSymmetricalMessage] = React.useState('');
+  const [symmetricalMessageOut, setSymmetricalMessageOut] = React.useState('');
+
   const generateKeyPair = async () => {
     setKeys({
       ...keys,
-      generated: false,
     });
     if (encryptionType === ENCRYPTION_TYPES.ASYMMETRIC) {
       const _keys = await Encryption.Asymmetric.generateKeyPair();
@@ -56,61 +59,79 @@ export default function App() {
       setKeys({
         ...keys,
         ..._keys,
-        generated: true,
       });
     } else if (encryptionType === ENCRYPTION_TYPES.SYMMETRIC) {
       const _key = await Encryption.Symmetric.generateKey();
-      console.log('Encryption.Symmetric', _key);
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      setKeys({
-        ...keys,
-        ..._key,
-        generated: true,
-      });
+      setSymmetricKey(_key.symmetricKey);
     }
   };
 
   const encryptString = async () => {
-    const m = message.value;
     let encryptedMessage = '';
 
     if (encryptionType === ENCRYPTION_TYPES.ASYMMETRIC) {
       encryptedMessage = await Encryption.Asymmetric.encrypt({
-        publicKey: keys.publicKey,
-        message: m,
+        publicKey: rKeys.publicKey,
+        message: outgoingMessage,
       });
+      console.log(encryptedMessage);
+
+      const encryptedMessage2 = await Encryption.Asymmetric.encryptGroup({
+        publicKeys: [rKeys.publicKey],
+        message: outgoingMessage,
+      });
+
+      setOutgoingMessage(JSON.stringify(encryptedMessage2));
     } else if (encryptionType === ENCRYPTION_TYPES.SYMMETRIC) {
       encryptedMessage = await Encryption.Symmetric.encrypt({
-        symmetricKey: keys.symmetricKey,
-        message: m,
+        symmetricKey: symmetricKey,
+        message: symmetricalMessage,
       });
+      console.log('LOOL', encryptedMessage);
+      setSymmetricalMessage(encryptedMessage);
     }
-    setMessage({
-      encrypted: true,
-      decrypted: false,
-      value: encryptedMessage,
-    });
   };
 
   const decryptString = async () => {
-    const m = message.value;
+    let outgoingMessages2 = JSON.parse(incomingMessage);
+    console.log('In decrypt', outgoingMessages2);
     let decryptedMessage = '';
 
     if (encryptionType === ENCRYPTION_TYPES.ASYMMETRIC) {
-      decryptedMessage = await Encryption.Asymmetric.decrypt({
+      // decryptedMessage = await Encryption.Asymmetric.decrypt({
+      //   privateKey: keys.privateKey,
+      //   message: incomingMessage,
+      // });
+      console.log('In ASYMMETRIC');
+      let decryptedMessage2 = await Encryption.Asymmetric.decryptGroup({
         privateKey: keys.privateKey,
-        message: m,
+        publicKey: keys.publicKey,
+        messages: outgoingMessages2,
       });
+      console.log('decryptedMessage2', decryptedMessage2);
+      setIncomingMessage(decryptedMessage2);
+
+      // setIncomingMessage(decryptedMessage);
     } else if (encryptionType === ENCRYPTION_TYPES.SYMMETRIC) {
       decryptedMessage = await Encryption.Symmetric.decrypt({
-        symmetricKey: keys.symmetricKey,
-        message: m,
+        symmetricKey: symmetricKey,
+        message: symmetricalMessageOut,
       });
+      setSymmetricalMessageOut(decryptedMessage);
     }
-    setMessage({
-      encrypted: false,
-      decrypted: true,
-      value: decryptedMessage,
+  };
+
+  const onChangeRPub = (m: string) => {
+    setRKeys({
+      ...rKeys,
+      publicKey: m,
+    });
+  };
+  const onChangeRPriv = (m: string) => {
+    setRKeys({
+      ...rKeys,
+      privateKey: m,
     });
   };
 
@@ -121,6 +142,26 @@ export default function App() {
     });
   };
 
+  const onChangeTextOut = (m: string) => {
+    setOutgoingMessage(m);
+  };
+
+  const onChangeSymmetricalMessage = (m: string) => {
+    setSymmetricalMessage(m);
+  };
+
+  const onChangeSymmetricalMessageOut = (m: string) => {
+    setSymmetricalMessageOut(m);
+  };
+
+  const onChangeSymmetricalKey = (m: string) => {
+    setSymmetricKey(m);
+  };
+
+  const onChangeTextIn = (m: string) => {
+    setIncomingMessage(m);
+  };
+
   const reset = () => {
     setMessage({
       encrypted: false,
@@ -128,10 +169,8 @@ export default function App() {
       value: '',
     });
     setKeys({
-      generated: false,
       publicKey: '',
       privateKey: '',
-      symmetricKey: '',
     });
   };
 
@@ -144,17 +183,27 @@ export default function App() {
   };
 
   return (
-    <View style={styles.container}>
-      <View>
-        <TouchableOpacity onPress={changeEncryptionType}>
-          <View
-            style={[
-              styles.button,
-              {
-                backgroundColor: '#e9e9e9',
-              },
-            ]}
-          >
+    <ScrollView style={styles.container} stickyHeaderIndices={[0]}>
+      <View
+        style={{
+          backgroundColor: '#fff',
+          paddingTop: 30,
+          justifyContent: 'space-between',
+          width: '100%',
+          flexDirection: 'row',
+        }}
+      >
+        <View
+          style={[
+            styles.button,
+            {
+              backgroundColor: '#e9e9e9',
+              paddingHorizontal: 10,
+              paddingVertical: 15,
+            },
+          ]}
+        >
+          <TouchableOpacity onPress={changeEncryptionType}>
             <Text
               style={{
                 color: '#333',
@@ -162,51 +211,521 @@ export default function App() {
             >
               Change Encryption type
             </Text>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </View>
       </View>
-      <TouchableOpacity onPress={generateKeyPair}>
+      <View
+        style={{
+          width: '100%',
+          borderTopColor: '#e9e9e9',
+          borderTopWidth: 0.5,
+          padding: 20,
+        }}
+      >
         <View
-          style={[
-            styles.button,
-            {
-              backgroundColor: keys.generated ? '#3D854D' : '#e9e9e9',
-            },
-          ]}
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
         >
-          <Text
+          <Text style={{ fontSize: 14, color: '#444', fontWeight: '700' }}>
+            My Keys
+          </Text>
+          <TouchableOpacity onPress={generateKeyPair}>
+            <View
+              style={[
+                styles.button,
+                {
+                  backgroundColor: '#e9e9e9',
+                  paddingHorizontal: 10,
+                  paddingVertical: 7.5,
+                  borderRadius: 10,
+                },
+              ]}
+            >
+              <Text
+                style={{
+                  color: '#333',
+                }}
+              >
+                Generate Keys
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+        {/* SYMMETRICAL KEYS */}
+        {encryptionType === ENCRYPTION_TYPES.SYMMETRIC && (
+          <View>
+            <Text
+              style={{
+                fontSize: 12,
+                color: '#444',
+                fontWeight: '700',
+                marginTop: 10,
+              }}
+            >
+              Shared Secret:
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: 10,
+              }}
+            >
+              <TextInput
+                numberOfLines={1}
+                value={symmetricKey}
+                onChangeText={onChangeSymmetricalKey}
+                style={styles.textInput}
+              />
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#e9e9e9',
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderRadius: 10,
+                }}
+                onPress={() => Clipboard.setString(symmetricKey)}
+              >
+                <Text>Copy</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+        {/* ASYMMETRICAL KEYS */}
+        {encryptionType === ENCRYPTION_TYPES.ASYMMETRIC && (
+          <>
+            <View>
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: '#444',
+                  fontWeight: '700',
+                  marginTop: 10,
+                }}
+              >
+                Public:
+              </Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: '#444',
+                    maxWidth: 300,
+                    marginTop: 5,
+                  }}
+                  numberOfLines={1}
+                >
+                  {keys.publicKey}
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#e9e9e9',
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    borderRadius: 10,
+                  }}
+                  onPress={() => Clipboard.setString(keys.publicKey)}
+                >
+                  <Text>Copy</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View>
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: '#444',
+                  fontWeight: '700',
+                  marginTop: 10,
+                }}
+              >
+                Private:
+              </Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: '#444',
+                    maxWidth: 300,
+                    marginTop: 5,
+                  }}
+                  numberOfLines={1}
+                >
+                  {keys.privateKey}
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#e9e9e9',
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    borderRadius: 10,
+                  }}
+                  onPress={() => Clipboard.setString(keys.privateKey)}
+                >
+                  <Text>Copy</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </>
+        )}
+      </View>
+      {encryptionType === ENCRYPTION_TYPES.ASYMMETRIC && (
+        <View
+          style={{
+            width: '100%',
+            borderTopColor: '#e9e9e9',
+            borderTopWidth: 0.5,
+            padding: 20,
+          }}
+        >
+          <View
             style={{
-              color: keys.generated ? '#fefefe' : '#333',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
             }}
           >
-            Generate Keys {time}
+            <Text style={{ fontSize: 14, color: '#444', fontWeight: '700' }}>
+              Recipient Keys
+            </Text>
+          </View>
+          <View>
+            <Text
+              style={{
+                fontSize: 12,
+                color: '#444',
+                fontWeight: '700',
+                marginTop: 10,
+              }}
+            >
+              Public:
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <TextInput
+                style={{
+                  fontSize: 12,
+                  color: '#444',
+                  maxWidth: 300,
+                  marginTop: 5,
+                  width: '100%',
+                  height: 40,
+                  borderColor: '#e9e9e9',
+                  borderWidth: 1,
+                  borderRadius: 10,
+                }}
+                numberOfLines={1}
+                value={rKeys.publicKey}
+                onChangeText={onChangeRPub}
+              />
+            </View>
+          </View>
+          <View>
+            <Text
+              style={{
+                fontSize: 12,
+                color: '#444',
+                fontWeight: '700',
+                marginTop: 10,
+              }}
+            >
+              Private:
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <TextInput
+                style={{
+                  fontSize: 12,
+                  color: '#444',
+                  maxWidth: 300,
+                  marginTop: 5,
+                  width: '100%',
+                  height: 40,
+                  borderColor: '#e9e9e9',
+                  borderWidth: 1,
+                  borderRadius: 10,
+                }}
+                numberOfLines={1}
+                value={rKeys.privateKey}
+                onChangeText={onChangeRPriv}
+              />
+            </View>
+          </View>
+        </View>
+      )}
+      <View
+        style={{
+          width: '100%',
+          borderTopColor: '#e9e9e9',
+          borderTopWidth: 0.5,
+          padding: 20,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 20,
+          }}
+        >
+          <Text style={{ fontSize: 14, color: '#444', fontWeight: '700' }}>
+            Messages
           </Text>
         </View>
-      </TouchableOpacity>
+        {encryptionType === ENCRYPTION_TYPES.ASYMMETRIC && (
+          <>
+            <View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: '#444',
+                    fontWeight: '700',
+                    marginTop: 10,
+                    marginBottom: 10,
+                  }}
+                >
+                  Outgoing:
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#e9e9e9',
+                    paddingHorizontal: 10,
+                    borderRadius: 10,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: 20,
+                    marginLeft: 10,
+                  }}
+                  onPress={() => Clipboard.setString(outgoingMessage)}
+                >
+                  <Text style={{ fontSize: 10 }}>Copy</Text>
+                </TouchableOpacity>
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <TextInput
+                  numberOfLines={1}
+                  value={outgoingMessage}
+                  onChangeText={onChangeTextOut}
+                  style={styles.textInput}
+                />
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#e9e9e9',
+                    paddingHorizontal: 15,
+                    paddingVertical: 15,
+                    borderRadius: 10,
+                  }}
+                  onPress={encryptString}
+                >
+                  <Text>Encrypt</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: '#444',
+                    fontWeight: '700',
+                    marginTop: 15,
+                    marginBottom: 10,
+                  }}
+                >
+                  Incoming:
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#e9e9e9',
+                    paddingHorizontal: 10,
+                    borderRadius: 10,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: 20,
+                    marginLeft: 10,
+                  }}
+                  onPress={() => Clipboard.setString(incomingMessage)}
+                >
+                  <Text style={{ fontSize: 10 }}>Copy</Text>
+                </TouchableOpacity>
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <TextInput
+                  numberOfLines={1}
+                  value={incomingMessage}
+                  onChangeText={onChangeTextIn}
+                  style={styles.textInput}
+                />
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#e9e9e9',
+                    paddingHorizontal: 15,
+                    paddingVertical: 15,
+                    borderRadius: 10,
+                  }}
+                  onPress={decryptString}
+                >
+                  <Text>Decrypt</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </>
+        )}
+        {encryptionType === ENCRYPTION_TYPES.SYMMETRIC && (
+          <>
+            <View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: '#444',
+                    fontWeight: '700',
+                    marginTop: 10,
+                    marginBottom: 10,
+                  }}
+                >
+                  Outgoing:
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#e9e9e9',
+                    paddingHorizontal: 10,
+                    borderRadius: 10,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: 20,
+                    marginLeft: 10,
+                  }}
+                  onPress={() => Clipboard.setString(symmetricalMessage)}
+                >
+                  <Text style={{ fontSize: 10 }}>Copy</Text>
+                </TouchableOpacity>
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <TextInput
+                  numberOfLines={1}
+                  value={symmetricalMessage}
+                  onChangeText={onChangeSymmetricalMessage}
+                  style={styles.textInput}
+                />
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#e9e9e9',
+                    paddingHorizontal: 15,
+                    paddingVertical: 15,
+                    borderRadius: 10,
+                  }}
+                  onPress={encryptString}
+                >
+                  <Text>Encrypt</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: '#444',
+                    fontWeight: '700',
+                    marginTop: 10,
+                    marginBottom: 10,
+                  }}
+                >
+                  Incomming:
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#e9e9e9',
+                    paddingHorizontal: 10,
+                    borderRadius: 10,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: 20,
+                    marginLeft: 10,
+                  }}
+                  onPress={() => Clipboard.setString(symmetricalMessageOut)}
+                >
+                  <Text style={{ fontSize: 10 }}>Copy</Text>
+                </TouchableOpacity>
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <TextInput
+                  numberOfLines={1}
+                  value={symmetricalMessageOut}
+                  onChangeText={onChangeSymmetricalMessageOut}
+                  style={styles.textInput}
+                />
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#e9e9e9',
+                    paddingHorizontal: 15,
+                    paddingVertical: 15,
+                    borderRadius: 10,
+                  }}
+                  onPress={decryptString}
+                >
+                  <Text>Decrypt</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </>
+        )}
+      </View>
+
       <View style={styles.textInputContainer}>
-        <View>
-          <View style={styles.metaRow}>
-            <Text style={styles.metaRowHeader}>Encryption Type:</Text>
-            <Text style={styles.metaRowText}>
-              {encryptionType === ENCRYPTION_TYPES.ASYMMETRIC
-                ? 'ASYMMETRIC'
-                : 'SYMMETRIC'}
-            </Text>
-          </View>
-          <View style={styles.metaRow}>
-            <Text style={styles.metaRowHeader}>Status:</Text>
-            <Text style={styles.metaRowText}>
-              {message.encrypted
-                ? 'Encrypted'
-                : message.decrypted
-                ? 'Decrypted'
-                : 'Plain'}
-            </Text>
-          </View>
-        </View>
-        <Text style={{ width: 300, textAlign: 'center' }} numberOfLines={1}>
-          {message.value}
-        </Text>
         <TextInput
           value={message.value}
           onChangeText={onChangeText}
@@ -269,15 +788,13 @@ export default function App() {
           </TouchableWithoutFeedback>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   button: {
     paddingHorizontal: 30,
@@ -299,13 +816,12 @@ const styles = StyleSheet.create({
     paddingTop: 50,
   },
   textInput: {
-    width: 250,
-    height: 60,
+    width: 275,
+    height: 50,
     borderColor: '#e9e9e9',
     borderWidth: 2,
     borderRadius: 15,
-    padding: 20,
-    marginTop: 20,
+    padding: 10,
   },
   buttonsContainer: {
     width: Dimensions.get('window').width,

@@ -4,6 +4,7 @@
 
 - (NSString *)AES256EncryptWithKey:(NSString *)key {
     NSData *plainData = [self dataUsingEncoding:NSUTF8StringEncoding];
+//    NSData *plainData = ;
     NSData *encryptedData = [plainData AES256EncryptWithKey:key];
     NSString *encryptedString = [encryptedData base64Encoding];
     return encryptedString;

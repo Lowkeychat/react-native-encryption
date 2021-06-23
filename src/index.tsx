@@ -9,9 +9,18 @@ type LowkeyEncryptionType = {
     }>;
     encrypt(props: { message: string; publicKey: string }): Promise<string>;
     decrypt(props: { message: string; privateKey: string }): Promise<string>;
+    encryptGroup(props: {
+      message: string;
+      publicKeys: string[];
+    }): Promise<any>;
+    decryptGroup(props: {
+      messages: any;
+      publicKey: string;
+      privateKey: string;
+    }): Promise<any>;
   };
   Symmetric: {
-    generateKey(): Promise<{ key: string }>;
+    generateKey(): Promise<{ symmetricKey: string }>;
     encrypt(props: { message: string; symmetricKey: string }): Promise<string>;
     decrypt(props: { message: string; symmetricKey: string }): Promise<string>;
   };
@@ -24,6 +33,8 @@ const Encryption = {
     generateKeyPair: LowkeyEncryption.asymmetric_generateKeyPair,
     encrypt: LowkeyEncryption.asymmetric_encryptStringWithPublicKey,
     decrypt: LowkeyEncryption.asymmetric_decryptStringWithPrivateKey,
+    encryptGroup: LowkeyEncryption.asymmetric_encryptGroup,
+    decryptGroup: LowkeyEncryption.asymmetric_decryptGroup,
   },
   Symmetric: {
     generateKey: LowkeyEncryption.symmetric_generateSymmetricKey,

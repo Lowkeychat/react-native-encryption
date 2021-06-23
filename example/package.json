@@ -9,6 +9,7 @@
     "start": "react-native start"
   },
   "dependencies": {
+    "@react-native-clipboard/clipboard": "^1.8.1",
     "react": "16.13.1",
     "react-native": "0.63.4"
   },

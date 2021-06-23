@@ -4,16 +4,16 @@
 #import "SymmetricEncryption.h"
 
 #import "NSString+AESCrypt.h"
+#import "NSData+AESCrypt.h"
 
 @implementation SymmetricEncryption
 
 #pragma mark -
 
 - (void)generateSymmetricKey:(RCTPromiseResolveBlock)resolve {
-    RCTLog(@"PULLI");
-    NSString* symmetricKey = [SymmetricEncryption generateSecureKey];
-    NSDictionary *key = @{ @"symmetricKey" : symmetricKey};
+    NSString *keyString = [SymmetricEncryption generateSecureKey];
     
+    NSDictionary *key = @{ @"symmetricKey" : keyString};
     resolve(key);
 
 }
@@ -26,10 +26,6 @@
     NSString *message = props[@"message"];
     
     NSString *chiperString = [message AES256EncryptWithKey:symmetricKeyString];
-    RCTLog(@"encrypted %@", chiperString);
-    
-    NSString *decrypted = [chiperString AES256DecryptWithKey:symmetricKeyString];
-    RCTLog(@"decrypted %@", decrypted);
     
     resolve(chiperString);
     
@@ -42,15 +38,13 @@
     NSString *message = props[@"message"];
     
     NSString *clearString = [message AES256DecryptWithKey:symmetricKeyString];
-    RCTLog(@"decrypted %@", clearString);
     
     resolve(clearString);
 }
 
 #pragma mark -
 
-+ (NSString*)generateSecureKey
-{
++ (NSString *)generateSecureKey {
     NSMutableData *data = [NSMutableData dataWithLength:32];
     int result = SecRandomCopyBytes(kSecRandomDefault, 32, data.mutableBytes);
     if (result != noErr) {
@@ -58,5 +52,6 @@
     }
     return [data base64EncodedStringWithOptions:kNilOptions];
 }
+
 
 @end

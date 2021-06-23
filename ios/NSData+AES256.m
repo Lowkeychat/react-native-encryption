@@ -2,6 +2,8 @@
 #import "NSData+AESCrypt.h"
 #import <CommonCrypto/CommonCryptor.h>
 
+#import <React/RCTLog.h>
+
 static char encodingTable[64] = {
     'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P',
     'Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f',
@@ -12,21 +14,20 @@ static char encodingTable[64] = {
 @implementation NSData (AESCrypt)
 
 - (NSData *)AES256EncryptWithKey:(NSString *)key {
-    // 'key' should be 32 bytes for AES256, will be null-padded otherwise
-    char keyPtr[kCCKeySizeAES256 + 1]; // room for terminator (unused)
-    bzero(keyPtr, sizeof(keyPtr)); // fill with zeros for padding
-    
+   
     // Get key data
-    [key getCString:keyPtr maxLength:sizeof(keyPtr) encoding:NSUTF8StringEncoding];
+    NSData *keyData = [[NSData alloc]initWithBase64EncodedString:key options:0];
+
     NSUInteger dataLength = [self length];
     
     size_t bufferSize = dataLength + kCCBlockSizeAES128;
     void *buffer = malloc(bufferSize);
     size_t numBytesEncrypted = 0;
-    CCCryptorStatus cryptStatus = CCCrypt(kCCEncrypt, kCCAlgorithmAES128,
-                                          kCCOptionPKCS7Padding, keyPtr,
-                                          kCCKeySizeAES256, NULL, [self bytes],
-                                          dataLength, buffer, bufferSize, &numBytesEncrypted);
+
+    CCCryptorStatus cryptStatus = CCCrypt(kCCEncrypt, kCCAlgorithmAES,
+                                              kCCOptionPKCS7Padding, keyData.bytes,
+                                              kCCKeySizeAES256, NULL, [self bytes],
+                                              dataLength, buffer, bufferSize, &numBytesEncrypted);
     if(cryptStatus == kCCSuccess) {
         return [NSData dataWithBytesNoCopy:buffer length:numBytesEncrypted];
     }
@@ -35,20 +36,17 @@ static char encodingTable[64] = {
 }
 
 - (NSData *)AES256DecryptWithKey:(NSString *)key {
-    // 'key' should be 32 bytes for AES256, will be null-padded otherwise.
-    char keyPtr[kCCKeySizeAES256 + 1];
-    bzero(keyPtr, sizeof(keyPtr));
-    
     // Get key data
-    [key getCString:keyPtr maxLength:sizeof(keyPtr) encoding:NSUTF8StringEncoding];
+    NSData *keyData = [[NSData alloc]initWithBase64EncodedString:key options:0];
+    
     NSUInteger dataLength = [self length];
     
     size_t bufferSize = dataLength + kCCBlockSizeAES128;
     void *buffer = malloc(bufferSize);
     
     size_t numBytesDecrypted = 0;
-    CCCryptorStatus cryptStatus = CCCrypt(kCCDecrypt, kCCAlgorithmAES128,
-                                          kCCOptionPKCS7Padding, keyPtr,
+    CCCryptorStatus cryptStatus = CCCrypt(kCCDecrypt, kCCAlgorithmAES,
+                                          kCCOptionPKCS7Padding, keyData.bytes,
                                           kCCKeySizeAES256, NULL, [self bytes],
                                           dataLength, buffer, bufferSize, &numBytesDecrypted);
     if(cryptStatus == kCCSuccess) {
@@ -202,6 +200,20 @@ static char encodingTable[64] = {
     }
     
     return [NSString stringWithString:result];
+}
+
+- (NSString *)hexadecimalString {
+    const unsigned char *dataBuffer = (const unsigned char *)[self bytes];
+    if (!dataBuffer) return [NSString string];
+    
+    NSUInteger          dataLength  = [self length];
+    NSMutableString     *hexString  = [NSMutableString stringWithCapacity:(dataLength * 2)];
+    
+    for (int i = 0; i < dataLength; ++i)
+        [hexString appendString:[NSString stringWithFormat:@"%02lx", (unsigned long)dataBuffer[i]]];
+    
+//    return [NSString stringWithString:hexString];
+    return @"VITTU";
 }
 
 
