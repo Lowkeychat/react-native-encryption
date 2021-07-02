@@ -18,40 +18,15 @@ class LowkeyEncryptionModule(reactContext: ReactApplicationContext) : ReactConte
 
     @ReactMethod
     fun asymmetric_generateKeyPair(promise: Promise) {
-      val keys = AsymmetricEncryption().generateKeyPair();
-
+      val keys = AsymmetricECCEncryption().generateKeyPair();
       promise.resolve(keys)
-
-    }
-
-    @ReactMethod
-    fun asymmetric_encryptStringWithPublicKey(props: ReadableMap, promise: Promise) {
-      val publicKey: String? = props.getString("publicKey")
-      val message: String? = props.getString("message")
-
-      val chiperString = AsymmetricEncryption().encrypt(publicKey, message);
-
-      promise.resolve(chiperString)
-
-    }
-
-    @ReactMethod
-    fun asymmetric_decryptStringWithPrivateKey(props: ReadableMap, promise: Promise) {
-      val privateKey: String? = props.getString("privateKey")
-      val message: String? = props.getString("message")
-
-      val clearString = AsymmetricEncryption().decrypt(privateKey, message);
-
-      promise.resolve(clearString)
-
     }
 
     @ReactMethod
     fun asymmetric_encryptGroup(props: ReadableMap, promise: Promise) {
       val publicKeys: ArrayList<String> = toList(props.getArray("publicKeys")) as ArrayList<String>;
       val message: String? = props.getString("message")
-
-      val encryptedObject = AsymmetricEncryption().encryptGroup(publicKeys, message);
+      val encryptedObject = AsymmetricECCEncryption().encryptGroup(publicKeys, message);
 
       promise.resolve(encryptedObject)
 
@@ -61,14 +36,9 @@ class LowkeyEncryptionModule(reactContext: ReactApplicationContext) : ReactConte
     fun asymmetric_decryptGroup(props: ReadableMap, promise: Promise) {
       val publicKey: String = props.getString("publicKey") as String
       val privateKey: String = props.getString("privateKey") as String
-
-      // val publicKeys: ArrayList<String> = toList(props.getArray("publicKeys")) as ArrayList<String>;
-      Log.d("INNES 1", "")
       val messages: ReadableMap = props.getMap("messages") as ReadableMap;
-      Log.d("INNES 2", "")
-      //val message: String = ArrayList<any>props.getString("message") as String
 
-      val encryptedObject = AsymmetricEncryption().decryptGroup(publicKey, privateKey, messages);
+      val encryptedObject = AsymmetricECCEncryption().decryptGroup(publicKey, privateKey, messages);
 
       promise.resolve(encryptedObject)
 
