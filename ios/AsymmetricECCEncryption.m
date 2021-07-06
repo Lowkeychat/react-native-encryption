@@ -47,8 +47,6 @@
     SecKeyRef publicKey = SecKeyCopyPublicKey(privateKey);
     NSData* publicKeyData = (NSData*)CFBridgingRelease(SecKeyCopyExternalRepresentation(publicKey, &error));
     
-    RCTLog(@"DATA %@", publicKeyData);
-    
     if (!publicKeyData) {
         NSError *err = CFBridgingRelease(error);
         RCTFatal(err);
@@ -76,7 +74,6 @@
         
         for (NSString* pk in publicKeysString) {
             NSString *fingerprint;
-            RCTLog(@"pk ----> %@", pk);
             NSData *publicKeyData = [[NSData alloc] initWithBase64EncodedString:pk options:0];
         
             NSDictionary* options = @{(id)kSecAttrKeyType: (id)kSecAttrKeyTypeECSECPrimeRandom,
@@ -84,8 +81,6 @@
                                       (id)kSecAttrKeySizeInBits: @256,
             };
             CFErrorRef error = NULL;
-            
-            RCTLog(@"publicKeyData ----> %@", publicKeyData);
             
             SecKeyRef publicKey = SecKeyCreateWithData((__bridge CFDataRef)publicKeyData,
                                                        (__bridge CFDictionaryRef)options,
@@ -121,7 +116,6 @@
                     RCTFatal(err);
                 }
                 
-                RCTLog(@"cipherData size 1 %lu", (unsigned long)[cipherData length]);
                 NSString *chiperString = [cipherData base64EncodedStringWithOptions:0];
                 [encryptedObject setValue:chiperString forKey:fingerprint];
                 
@@ -140,7 +134,7 @@
     
     
     NSString *privateKeyString = props[@"privateKey"];
-    NSString *publicKeyString = props[@"publicKey"]; // [self cleanPublicKey:props[@"publicKey"]];
+    NSString *publicKeyString = props[@"publicKey"];
     NSDictionary *messages = props[@"messages"];
     
     
@@ -151,8 +145,6 @@
 //    privateKeyString = [self cleanPrivateKey:privateKeyString];
     
     NSData *cipherData = [[NSData alloc] initWithBase64EncodedString:message options:0];
-    
-    RCTLog(@"cipherData size %lu", (unsigned long)[cipherData length]);
     
     NSData *privateKeyData = [[NSData alloc] initWithBase64EncodedString:privateKeyString options:0];
     NSDictionary* options = @{(id)kSecAttrKeyType: (id)kSecAttrKeyTypeECSECPrimeRandom,
@@ -171,8 +163,6 @@
     BOOL canDecrypt = SecKeyIsAlgorithmSupported(privateKey,
                                                     kSecKeyOperationTypeDecrypt,
                                                     algorithm);
-    
-//    canDecrypt &= ([cipherData length] == SecKeyGetBlockSize(privateKey));
     
     
     if (canDecrypt) {
