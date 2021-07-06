@@ -71,12 +71,6 @@ export default function App() {
     let encryptedMessage = '';
 
     if (encryptionType === ENCRYPTION_TYPES.ASYMMETRIC) {
-      encryptedMessage = await Encryption.Asymmetric.encrypt({
-        publicKey: rKeys.publicKey,
-        message: outgoingMessage,
-      });
-      console.log(encryptedMessage);
-
       const encryptedMessage2 = await Encryption.Asymmetric.encryptGroup({
         publicKeys: [rKeys.publicKey],
         message: outgoingMessage,
