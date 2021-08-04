@@ -134,8 +134,6 @@ class AsymmetricEncryption {
       val publicKey = publicKeyInfo["publicKey"] as PublicKey
       val fingerprint = publicKeyInfo["fingerprint"] as String
 
-      Log.d("fingerprint", fingerprint)
-
       cipher.init(Cipher.ENCRYPT_MODE, publicKey)
 
       val inputData = inputString?.toByteArray()
@@ -209,8 +207,6 @@ class AsymmetricEncryption {
 
       val publicKeyByteArray: ByteArray = decoder.decode(publicKeyBase64)
 
-      Log.d("publicKey.encoded hex", hex(publicKeyByteArray))
-
       val kf = KeyFactory.getInstance("RSA")
       publicKey = kf.generatePublic(X509EncodedKeySpec(publicKeyByteArray))
 
@@ -229,8 +225,6 @@ class AsymmetricEncryption {
       .replace("\\s+".toRegex(), "")
 
     val publicKeyByteArray: ByteArray = decoder.decode(publicKeyBase64)
-
-    Log.d("publicKey.encoded hex2", hex(publicKeyByteArray))
 
     publicKey = PKCS1ToSubjectPublicKeyInfo().decodePKCS1PublicKey(publicKeyByteArray);
 
