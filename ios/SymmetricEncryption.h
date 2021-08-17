@@ -8,6 +8,9 @@
 
 - (void)encryptStringWithSymmetricKey:(RCTPromiseResolveBlock)resolve props:(NSDictionary*)props;
 
-- (void)decryptStringWithSymmetricKey:(RCTPromiseResolveBlock)resolve                   props:(NSDictionary*)props;
+- (void)decryptStringWithSymmetricKey:(RCTPromiseResolveBlock)resolve props:(NSDictionary*)props;
+
+- (NSString *)encryptStringWithSymmetricKeyWithReturn:(NSDictionary*)props;
+- (NSString *)decryptStringWithSymmetricKeyWithReturn:(NSDictionary*)props;
 
 @end
