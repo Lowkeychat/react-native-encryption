@@ -17,6 +17,12 @@
     resolve(key);
 
 }
+- (NSString *)generateSymmetricKeyString {
+    NSString *keyString = [SymmetricEncryption generateSecureKey];
+    
+    return keyString;
+
+}
 
 
 #pragma mark -

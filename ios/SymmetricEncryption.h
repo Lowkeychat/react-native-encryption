@@ -10,6 +10,7 @@
 
 - (void)decryptStringWithSymmetricKey:(RCTPromiseResolveBlock)resolve props:(NSDictionary*)props;
 
+- (NSString *)generateSymmetricKeyString;
 - (NSString *)encryptStringWithSymmetricKeyWithReturn:(NSDictionary*)props;
 - (NSString *)decryptStringWithSymmetricKeyWithReturn:(NSDictionary*)props;
 
