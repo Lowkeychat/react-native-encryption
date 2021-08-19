@@ -10,34 +10,18 @@
 
 #pragma mark -
 
-- (void)generateSymmetricKey:(RCTPromiseResolveBlock)resolve {
+- (NSDictionary *)generateSymmetricKey {
     NSString *keyString = [SymmetricEncryption generateSecureKey];
     
     NSDictionary *key = @{ @"symmetricKey" : keyString};
-    resolve(key);
-
-}
-- (NSString *)generateSymmetricKeyString {
-    NSString *keyString = [SymmetricEncryption generateSecureKey];
-    
-    return keyString;
+    return key;
 
 }
 
 
 #pragma mark -
 
-- (void)encryptStringWithSymmetricKey:(RCTPromiseResolveBlock)resolve props:(NSDictionary*)props {
-    NSString *symmetricKeyString = props[@"symmetricKey"];
-    NSString *message = props[@"message"];
-    
-    NSString *chiperString = [message AES256EncryptWithKey:symmetricKeyString];
-    
-    resolve(chiperString);
-    
-}
-
-- (NSString *)encryptStringWithSymmetricKeyWithReturn:(NSDictionary*)props {
+- (NSString *)encryptStringWithSymmetricKey:(NSDictionary*)props {
     NSString *symmetricKeyString = props[@"symmetricKey"];
     NSString *message = props[@"message"];
     
@@ -49,16 +33,7 @@
 
 #pragma mark -
 
-- (void)decryptStringWithSymmetricKey:(RCTPromiseResolveBlock)resolve props:(NSDictionary*)props {
-    NSString *symmetricKeyString = props[@"symmetricKey"];
-    NSString *message = props[@"message"];
-    
-    NSString *clearString = [message AES256DecryptWithKey:symmetricKeyString];
-    
-    resolve(clearString);
-}
-
-- (NSString *)decryptStringWithSymmetricKeyWithReturn:(NSDictionary*)props {
+- (NSString *)decryptStringWithSymmetricKey:(NSDictionary*)props {
     NSString *symmetricKeyString = props[@"symmetricKey"];
     NSString *message = props[@"message"];
     
@@ -66,6 +41,7 @@
     
     return clearString;
 }
+
 
 #pragma mark -
 

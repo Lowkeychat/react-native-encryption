@@ -59,7 +59,8 @@ RCT_REMAP_METHOD(symmetric_generateSymmetricKey,
 {
     dispatch_queue_t queue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0ul);
     dispatch_async(queue, ^{
-        [[SymmetricEncryption alloc] generateSymmetricKey:resolve];
+        NSDictionary* key = [[SymmetricEncryption alloc] generateSymmetricKey];
+        resolve(key);
     });
 }
 
@@ -71,7 +72,8 @@ RCT_EXPORT_METHOD(symmetric_encryptStringWithSymmetricKey:(NSDictionary *)option
 {
     dispatch_queue_t queue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0ul);
     dispatch_async(queue, ^{
-        [[SymmetricEncryption alloc] encryptStringWithSymmetricKey:resolve props:options];
+        NSString *chiperString =[[SymmetricEncryption alloc] encryptStringWithSymmetricKey:options];
+        resolve(chiperString);
     });
     
 }
@@ -84,7 +86,8 @@ RCT_EXPORT_METHOD(symmetric_decryptStringWithSymmetricKey:(NSDictionary *)option
 {
     dispatch_queue_t queue  = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0ul);
     dispatch_async(queue, ^{
-        [[SymmetricEncryption alloc] decryptStringWithSymmetricKey:resolve props:options];
+        NSString *clearString = [[SymmetricEncryption alloc] decryptStringWithSymmetricKey:options];
+        resolve(clearString);
     });
 }
 
