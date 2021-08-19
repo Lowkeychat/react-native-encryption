@@ -6,6 +6,8 @@
 #import "NSString+AESCrypt.h"
 #import "NSData+AESCrypt.h"
 
+#import "SymmetricEncryptionUtils.h"
+
 @implementation SymmetricEncryption
 
 #pragma mark -
@@ -25,7 +27,7 @@
     NSString *symmetricKeyString = props[@"symmetricKey"];
     NSString *message = props[@"message"];
     
-    NSString *chiperString = [message AES256EncryptWithKey:symmetricKeyString];
+    NSString *chiperString = [[SymmetricEncryptionUtils alloc] AES256EncryptWithKey:symmetricKeyString message:message];
     
     return chiperString;
     
@@ -37,7 +39,7 @@
     NSString *symmetricKeyString = props[@"symmetricKey"];
     NSString *message = props[@"message"];
     
-    NSString *clearString = [message AES256DecryptWithKey:symmetricKeyString];
+    NSString *clearString = [[SymmetricEncryptionUtils alloc] AES256DecryptWithKey:symmetricKeyString message:message];
     
     return clearString;
 }

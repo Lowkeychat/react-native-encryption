@@ -82,31 +82,21 @@ export default function App() {
         symmetricKey: symmetricKey,
         message: symmetricalMessage,
       });
-      console.log('LOOL', encryptedMessage);
       setSymmetricalMessage(encryptedMessage);
     }
   };
 
   const decryptString = async () => {
-    let outgoingMessages2 = JSON.parse(incomingMessage);
-    console.log('In decrypt', outgoingMessages2);
     let decryptedMessage = '';
 
     if (encryptionType === ENCRYPTION_TYPES.ASYMMETRIC) {
-      // decryptedMessage = await Encryption.Asymmetric.decrypt({
-      //   privateKey: keys.privateKey,
-      //   message: incomingMessage,
-      // });
-      console.log('In ASYMMETRIC');
+      let outgoingMessages2 = JSON.parse(incomingMessage);
       let decryptedMessage2 = await Encryption.Asymmetric.decryptGroup({
         privateKey: keys.privateKey,
         publicKey: keys.publicKey,
         messages: outgoingMessages2,
       });
-      console.log('decryptedMessage2', decryptedMessage2);
       setIncomingMessage(decryptedMessage2);
-
-      // setIncomingMessage(decryptedMessage);
     } else if (encryptionType === ENCRYPTION_TYPES.SYMMETRIC) {
       decryptedMessage = await Encryption.Symmetric.decrypt({
         symmetricKey: symmetricKey,
