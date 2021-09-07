@@ -8,7 +8,7 @@
 
 - (void)decryptStringWithPrivateKey:(RCTPromiseResolveBlock)resolve                   props:(NSDictionary*)props;
 
-- (void)decryptGroup:(RCTPromiseResolveBlock)resolve props:(NSDictionary*)props;
+- (void)decryptGroup:(RCTPromiseResolveBlock)resolve props:(NSDictionary*)props error:(void (^)(NSError *))errorCallback;
 
 - (void)encryptGroup:(RCTPromiseResolveBlock)resolve props:(NSDictionary*)props;
 

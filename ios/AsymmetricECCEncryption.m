@@ -128,7 +128,8 @@
     
 }
 
-- (void)decryptGroup:(RCTPromiseResolveBlock)resolve props:(NSDictionary*)props {
+- (void)decryptGroup:(RCTPromiseResolveBlock)resolve props:(NSDictionary*)props error:(void (^)(NSError *))errorCallback
+{
     
     SecKeyAlgorithm algorithm = kSecKeyAlgorithmECIESEncryptionCofactorVariableIVX963SHA256AESGCM;
     
@@ -142,7 +143,10 @@
     NSString *fingerprint = [self sha1:publicKeyData];
     NSString *message = messages[fingerprint];
     
-//    privateKeyString = [self cleanPrivateKey:privateKeyString];
+    if ([message length] == 0) {
+        NSError *messageError = [NSError errorWithDomain:@"react-native-encryption" code:400 userInfo:@{@"Error reason": @"Corresponding fingerprint not found"}];
+        return errorCallback(messageError);
+    }
     
     NSData *cipherData = [[NSData alloc] initWithBase64EncodedString:message options:0];
     

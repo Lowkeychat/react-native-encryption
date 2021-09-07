@@ -71,17 +71,24 @@ export default function App() {
     let encryptedMessage = '';
 
     if (encryptionType === ENCRYPTION_TYPES.ASYMMETRIC) {
-      const encryptedMessage2 = await Encryption.Asymmetric.encryptGroup({
-        publicKeys: [rKeys.publicKey],
-        message: outgoingMessage,
-      });
-
-      setOutgoingMessage(JSON.stringify(encryptedMessage2));
+      try {
+        const encryptedMessage2 = await Encryption.Asymmetric.encryptGroup({
+          publicKeys: [rKeys.publicKey],
+          message: outgoingMessage,
+        });
+        setOutgoingMessage(JSON.stringify(encryptedMessage2));
+      } catch (e) {
+        console.log(e);
+      }
     } else if (encryptionType === ENCRYPTION_TYPES.SYMMETRIC) {
-      encryptedMessage = await Encryption.Symmetric.encrypt({
-        symmetricKey: symmetricKey,
-        message: symmetricalMessage,
-      });
+      try {
+        encryptedMessage = await Encryption.Symmetric.encrypt({
+          symmetricKey: symmetricKey,
+          message: symmetricalMessage,
+        });
+      } catch (e) {
+        console.log(e);
+      }
       setSymmetricalMessage(encryptedMessage);
     }
   };
@@ -91,12 +98,16 @@ export default function App() {
 
     if (encryptionType === ENCRYPTION_TYPES.ASYMMETRIC) {
       let outgoingMessages2 = JSON.parse(incomingMessage);
-      let decryptedMessage2 = await Encryption.Asymmetric.decryptGroup({
-        privateKey: keys.privateKey,
-        publicKey: keys.publicKey,
-        messages: outgoingMessages2,
-      });
-      setIncomingMessage(decryptedMessage2);
+      try {
+        let decryptedMessage2 = await Encryption.Asymmetric.decryptGroup({
+          privateKey: keys.privateKey,
+          publicKey: keys.publicKey,
+          messages: outgoingMessages2,
+        });
+        setIncomingMessage(decryptedMessage2);
+      } catch (e) {
+        console.log(e);
+      }
     } else if (encryptionType === ENCRYPTION_TYPES.SYMMETRIC) {
       decryptedMessage = await Encryption.Symmetric.decrypt({
         symmetricKey: symmetricKey,
